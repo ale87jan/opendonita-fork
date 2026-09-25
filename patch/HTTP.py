@@ -188,7 +188,7 @@ class HttpServer:
     async def InConnection(self, reader, writer):
         header = await reader.readline()
         cheaders = header.decode('latin1').strip()
-        request_line = re.match(r'^(\S+)[ \t]+(.+)[ \t]+(\S+)$', cheaders)
+        request_line = re.match(r'^(\S+)[ \t]+(\S+)[ \t]+(\S+)$', cheaders)
         if request_line is None:
             request = HttpRequest('GET', '/', 'HTTP/1.1', {})
             ans = BadRequestAnswer(request)
