@@ -1,18 +1,7 @@
-# Home Assistant Open Doñita add-on
+# Open Doñita Add-on
 
-![Supports aarch64 Architecture][aarch64-shield]
-![Supports amd64 Architecture][amd64-shield]
-![Supports armhf Architecture][armhf-shield]
-![Supports armv7 Architecture][armv7-shield]
-![Supports i386 Architecture][i386-shield]
-
-[aarch64-shield]: https://img.shields.io/badge/aarch64-yes-green.svg
-[amd64-shield]: https://img.shields.io/badge/amd64-yes-green.svg
-[armhf-shield]: https://img.shields.io/badge/armhf-yes-green.svg
-[armv7-shield]: https://img.shields.io/badge/armv7-yes-green.svg
-[i386-shield]: https://img.shields.io/badge/i386-yes-green.svg
-
-The [Open Doñita server](https://gitlab.com/rastersoft/opendonita) add-on for Home Assistant.
+This add-on integrates the Open Doñita server in your Home Assistant instance. It allows you to
+control your Conga 1390/1490/1590 robotic vacuum cleaners from Home Assistant.
 
 ## Compatibility
 
@@ -20,14 +9,9 @@ OpenDoñita is a server designed to work with the Conga 1390/1490/1590 robotic v
 distributed by Cecotec in Spain. Since it is really a robot manufactured by the chinese company
 robot bona, it is very probable that it would work with other robots.
 
-## Installation
+## Configuration
 
-You will need to pair your Conga with your server, follow the instructions
-found on the [Open Doñita server site](https://gitlab.com/rastersoft/opendonita).
-
-[![Open your Home Assistant instance and show the dashboard of an app.](https://my.home-assistant.io/badges/supervisor_app.svg)](https://my.home-assistant.io/redirect/supervisor_app/?repository_url=https%3A%2F%2Fgithub.com%2Fale87jan%2Fopendonita-fork&app=Open+Do%C3%B1ita+add-on)
-
-After having done this, you can jump to **Conecting the robot to the new server**
+The Open Doñita server needs to **use ports 80 and 20008**, you don't need to forward them from your router because they will be used by the conga from your local network, but you need to ensure that there are no other services using those ports in your Home Assistant instance.
 
 ### Connecting the robot to the new server
 

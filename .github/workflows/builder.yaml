@@ -1,62 +1,74 @@
-name: Builder
-
-env:
-  BUILD_ARGS: "--test"
+name: Build
 
 on:
-  push:
-    branches:
-      - master
-  pull_request:
-    branches:
-      - master
+  release:
+    types: [published]
+
+env:
+  ARCHITECTURES: '["amd64", "aarch64"]'
+  IMAGE_NAME: opendonita-hassio
+
+permissions:
+  contents: read
 
 jobs:
-  build:
+  init:
+    name: Initialize build
     runs-on: ubuntu-latest
-    name: Build ${{ matrix.arch }} add-on
-    strategy:
-      matrix:
-        arch: ["aarch64", "amd64", "armhf", "armv7", "i386"]
-
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v3.1.0
+      - uses: actions/checkout@v6
 
-      - name: Get information
-        id: info
-        uses: home-assistant/actions/helpers/info@master
-
-      - name: Check if add-on should be built
-        id: check
-        run: |
-          if [[ "${{ steps.info.outputs.architectures }}" =~ ${{ matrix.arch }} ]]; then
-             echo "::set-output name=build_arch::true";
-             echo "::set-output name=image::$(echo ${{ steps.info.outputs.image }} | cut -d'/' -f3)";
-             if [[ -z "${{ github.head_ref }}" ]] && [[ "${{ github.event_name }}" == "push" ]]; then
-                 echo "BUILD_ARGS=" >> $GITHUB_ENV;
-             fi
-           else
-             echo "${{ matrix.arch }} is not a valid arch for this addon, skipping build";
-             echo "::set-output name=build_arch::false";
-          fi
-
-      - name: Login to GitHub Container Registry
-        if: env.BUILD_ARGS != '--test'
-        uses: docker/login-action@v2.1.0
+      - name: Get build matrix
+        id: matrix
+        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@[version]
         with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          architectures: ${{ env.ARCHITECTURES }}
+          image-name: ${{ env.IMAGE_NAME }}
 
-      - name: Build add-on
-        if: steps.check.outputs.build_arch == 'true'
-        uses: home-assistant/builder@2022.09.0
+  build:
+    name: Build ${{ matrix.arch }} image
+    needs: init
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read # To check out the code
+      id-token: write # Write needed for Cosign signing (issue OIDC token for signing)
+      packages: write # To push built images to GitHub Container Registry
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.init.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Build image
+        uses: home-assistant/builder/actions/build-image@[version]
         with:
-          args: |
-            ${{ env.BUILD_ARGS }} \
-            --${{ matrix.arch }} \
-            --target /data \
-            --image "${{ steps.check.outputs.image }}" \
-            --docker-hub "ghcr.io/${{ github.repository_owner }}" \
-            --addon
+          arch: ${{ matrix.arch }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          image: ${{ matrix.image }}
+          image-tags: |
+            ${{ github.event.release.tag_name }}
+            latest
+          push: "true"
+          skip-existing: ${{ github.event.release.tag_name }}
+          version: ${{ github.event.release.tag_name }}
+
+  manifest:
+    name: Publish multi-arch manifest
+    needs: [init, build]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Write needed for Cosign signing (issue OIDC token for signing)
+      packages: write # To push the manifest to GitHub Container Registry
+    steps:
+      - name: Publish multi-arch manifest
+        uses: home-assistant/builder/actions/publish-multi-arch-manifest@[version]
+        with:
+          architectures: ${{ env.ARCHITECTURES }}
+          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+          image-name: ${{ env.IMAGE_NAME }}
+          image-tags: |
+            ${{ github.event.release.tag_name }}
+            latest
+          skip-existing: ${{ github.event.release.tag_name }}
