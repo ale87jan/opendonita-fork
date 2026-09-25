@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
-# copy to your .venv/lib/python3.10/site-packages/upnp folder
+# copy to your Python site-packages/upnp folder
 import asyncio
+import re
 from socket import gethostname
 
 class HttpResponder(asyncio.Protocol):
@@ -69,6 +70,12 @@ class ServerErrorAnswer(HttpAnswer):
         self.statusCode = 500
         self.statusText = 'Internal Server Error'
         self.data = '<html><body><h1>Internal Server Error</h1><p>An internal server error. See logs.</p></body></html>'
+
+class BadRequestAnswer(HttpAnswer):
+    def execute(self):
+        self.statusCode = 400
+        self.statusText = 'Bad Request'
+        self.data = '<html><body><h1>Bad Request</h1><p>Malformed request.</p></body></html>'
 
 class DescriptionAnswer(HttpAnswer):
     def __init__(self, request, upnp):
@@ -167,15 +174,33 @@ class HttpServer:
     def __init__(self, config):
         self.config = config
 
-    @asyncio.coroutine
-    def InConnection(self, reader, writer):
-        header = yield from reader.readline()
+    async def closeWriter(self, writer):
+        try:
+            await writer.drain()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
+
+    async def InConnection(self, reader, writer):
+        header = await reader.readline()
         cheaders = header.decode('latin1').strip()
-        method, path, vers = cheaders.split(' ')
+        request_line = re.match(r'^(\S+)[ \t]+(\S+)[ \t]+(\S+)$', cheaders)
+        if request_line is None:
+            request = HttpRequest('GET', '/', 'HTTP/1.1', {})
+            ans = BadRequestAnswer(request)
+            ans.execute()
+            ans.write(writer)
+            await self.closeWriter(writer)
+            return
+        method, path, vers = request_line.groups()
         headers = dict()
 
         while not reader.at_eof():
-            rawheaders = yield from reader.readline()
+            rawheaders = await reader.readline()
             headline = rawheaders.decode('latin1').strip().lower()
             if headline == '':
                 break
@@ -188,7 +213,7 @@ class HttpServer:
         ans.execute()
         ans.pprint()
         ans.write(writer)
-        writer.close()
+        await self.closeWriter(writer)
 
     def HttpRouting(self, request):
         if request.path == '/descr.xml':
