@@ -170,8 +170,16 @@ class HttpServer:
     async def InConnection(self, reader, writer):
         header = await reader.readline()
         cheaders = header.decode('latin1').strip()
-        method, remainder = cheaders.split(' ', maxsplit=1)
-        path, vers = remainder.rsplit(' ', maxsplit=1)
+        try:
+            method, remainder = cheaders.split(' ', maxsplit=1)
+            path, vers = remainder.rsplit(' ', maxsplit=1)
+        except ValueError:
+            request = HttpRequest('GET', '/', 'HTTP/1.1', {})
+            ans = ServerErrorAnswer(request)
+            ans.execute()
+            ans.write(writer)
+            writer.close()
+            return
         path = path.strip()
         headers = dict()
 
