@@ -25,7 +25,7 @@ robot bona, it is very probable that it would work with other robots.
 You will need to pair your Conga with your server, follow the instructions
 found on the [Open Doñita server site](https://gitlab.com/rastersoft/opendonita).
 
-[![Open your Home Assistant instance and show the dashboard of an app.](https://my.home-assistant.io/badges/supervisor_app.svg)](https://my.home-assistant.io/redirect/supervisor_app/?repository_url=https%3A%2F%2Fgithub.com%2Fale87jan%2Fopendonita-fork&app=Open+Do%C3%B1ita+add-on)
+[![Open your Home Assistant instance and show the dashboard of an app.](https://my.home-assistant.io/badges/supervisor_app.svg)](https://my.home-assistant.io/redirect/supervisor_app/?app=fe7d3f1a_opendonita&repository_url=https%3A%2F%2Fgithub.com%2Fale87jan%2Fopendonita-fork)
 
 After having done this, you can jump to **Conecting the robot to the new server**
 
