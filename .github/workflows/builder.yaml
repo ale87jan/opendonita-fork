@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  ARCHITECTURES: '["amd64", "aarch64"]'
+  ARCHITECTURES: '["amd64"]'
   IMAGE_NAME: opendonita-hassio
 
 permissions:
