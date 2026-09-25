@@ -173,6 +173,11 @@ class HttpServer:
     def __init__(self, config):
         self.config = config
 
+    async def closeWriter(self, writer):
+        await writer.drain()
+        writer.close()
+        await writer.wait_closed()
+
     async def InConnection(self, reader, writer):
         header = await reader.readline()
         cheaders = header.decode('latin1').strip()
@@ -184,7 +189,7 @@ class HttpServer:
             ans = BadRequestAnswer(request)
             ans.execute()
             ans.write(writer)
-            writer.close()
+            await self.closeWriter(writer)
             return
         path = path.strip()
         headers = dict()
@@ -203,7 +208,7 @@ class HttpServer:
         ans.execute()
         ans.pprint()
         ans.write(writer)
-        writer.close()
+        await self.closeWriter(writer)
 
     def HttpRouting(self, request):
         if request.path == '/descr.xml':
