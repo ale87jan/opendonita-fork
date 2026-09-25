@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# copy to your .venv/lib/python3.10/site-packages/upnp folder
+# copy to your Python site-packages/upnp folder
 import asyncio
 from socket import gethostname
 
@@ -167,15 +167,14 @@ class HttpServer:
     def __init__(self, config):
         self.config = config
 
-    @asyncio.coroutine
-    def InConnection(self, reader, writer):
-        header = yield from reader.readline()
+    async def InConnection(self, reader, writer):
+        header = await reader.readline()
         cheaders = header.decode('latin1').strip()
         method, path, vers = cheaders.split(' ')
         headers = dict()
 
         while not reader.at_eof():
-            rawheaders = yield from reader.readline()
+            rawheaders = await reader.readline()
             headline = rawheaders.decode('latin1').strip().lower()
             if headline == '':
                 break
