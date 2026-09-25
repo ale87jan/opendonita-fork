@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # copy to your Python site-packages/upnp folder
 import asyncio
+import re
 from socket import gethostname
 
 class HttpResponder(asyncio.Protocol):
@@ -174,24 +175,28 @@ class HttpServer:
         self.config = config
 
     async def closeWriter(self, writer):
-        await writer.drain()
+        try:
+            await writer.drain()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
         writer.close()
-        await writer.wait_closed()
+        try:
+            await writer.wait_closed()
+        except (BrokenPipeError, ConnectionResetError):
+            pass
 
     async def InConnection(self, reader, writer):
         header = await reader.readline()
         cheaders = header.decode('latin1').strip()
-        try:
-            method, remainder = cheaders.split(' ', maxsplit=1)
-            path, vers = remainder.rsplit(' ', maxsplit=1)
-        except ValueError:
+        request_line = re.match(r'^(\S+)[ \t]+(.+)[ \t]+(\S+)$', cheaders)
+        if request_line is None:
             request = HttpRequest('GET', '/', 'HTTP/1.1', {})
             ans = BadRequestAnswer(request)
             ans.execute()
             ans.write(writer)
             await self.closeWriter(writer)
             return
-        path = path.strip()
+        method, path, vers = request_line.groups()
         headers = dict()
 
         while not reader.at_eof():
