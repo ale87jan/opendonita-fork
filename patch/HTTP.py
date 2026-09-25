@@ -170,7 +170,9 @@ class HttpServer:
     async def InConnection(self, reader, writer):
         header = await reader.readline()
         cheaders = header.decode('latin1').strip()
-        method, path, vers = cheaders.split(maxsplit=2)
+        method, remainder = cheaders.split(' ', maxsplit=1)
+        path, vers = remainder.rsplit(' ', maxsplit=1)
+        path = path.strip()
         headers = dict()
 
         while not reader.at_eof():
