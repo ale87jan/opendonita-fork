@@ -70,6 +70,12 @@ class ServerErrorAnswer(HttpAnswer):
         self.statusText = 'Internal Server Error'
         self.data = '<html><body><h1>Internal Server Error</h1><p>An internal server error. See logs.</p></body></html>'
 
+class BadRequestAnswer(HttpAnswer):
+    def execute(self):
+        self.statusCode = 400
+        self.statusText = 'Bad Request'
+        self.data = '<html><body><h1>Bad Request</h1><p>Malformed request.</p></body></html>'
+
 class DescriptionAnswer(HttpAnswer):
     def __init__(self, request, upnp):
         super(DescriptionAnswer, self).__init__(request)
@@ -175,7 +181,7 @@ class HttpServer:
             path, vers = remainder.rsplit(' ', maxsplit=1)
         except ValueError:
             request = HttpRequest('GET', '/', 'HTTP/1.1', {})
-            ans = ServerErrorAnswer(request)
+            ans = BadRequestAnswer(request)
             ans.execute()
             ans.write(writer)
             writer.close()
