@@ -1,5 +1,5 @@
 # Normalización de saltos de línea
-* text=auto eol=lf
+* text=auto
 
 # Markdown
 *.md text eol=lf
