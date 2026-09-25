@@ -1,0 +1,26 @@
+# Normalización de saltos de línea
+* text=auto eol=lf
+
+# Markdown
+*.md text eol=lf
+
+# TOML
+*.toml text eol=lf
+
+# Docker
+docker-compose*.yml text eol=lf
+Dockerfile* text eol=lf
+
+# Scripts — forzar LF para que sean ejecutables en Linux/contenedores
+*.sh text eol=lf
+*.bash text eol=lf
+*.py text eol=lf
+
+# Binarios — sin conversión
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+*.tar.gz binary
