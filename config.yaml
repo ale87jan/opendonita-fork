@@ -1,6 +1,6 @@
 name: "Open Doñita"
 description: "The Open Doñita server for managing your Cecotec Conga"
-version: "0.3.9"
+version: "0.4.0"
 slug: "opendonita"
 url: "https://github.com/ale87jan/opendonita-fork"
 stage: experimental
